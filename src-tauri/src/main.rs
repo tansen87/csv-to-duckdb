@@ -6,6 +6,7 @@ use lib::connect;
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            connect::view,
             connect::connect,
             connect::query,
         ])

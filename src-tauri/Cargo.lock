@@ -4691,6 +4691,7 @@ dependencies = [
  "chrono",
  "csv",
  "duckdb",
+ "indexmap 2.2.6",
  "serde",
  "serde_json",
  "tauri",

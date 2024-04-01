@@ -82,6 +82,25 @@
       <q-input v-model="data.sql" color="teal" label="SQL" autogrow />
     </div>
   </div>
+
+  <div
+    class="q-pa-md"
+    style="
+      display: flex;
+      justify-content: space-between;
+      max-width: 1500px;
+      margin: 0 auto;
+    "
+  >
+    <q-table
+      title="csv view"
+      :rows="tableData"
+      :columns="columns"
+      row-key="name"
+      style="height: 430px; width: 100%"
+    >
+    </q-table>
+  </div>
 </template>
 
 <script setup>
@@ -93,6 +112,8 @@ import { listen } from "@tauri-apps/api/event";
 
 const $q = useQuasar();
 
+const columns = ref([]);
+const tableData = ref([]);
 const data = reactive({
   table: "duck",
   file: "",
@@ -103,6 +124,15 @@ const data = reactive({
   sep: ",",
 });
 const sepOptions = [",", "|", "\\t", ";"];
+
+listen("csv2json_err", (event) => {
+  const error = "csv2json_err: " + event.payload;
+  Notify.create({
+    type: "negative",
+    message: error,
+    position: "bottom-right",
+  });
+});
 
 // open file
 async function openFile() {
@@ -127,6 +157,19 @@ async function openFile() {
   } else {
     data.file = selected;
   }
+
+  const result = await invoke("view", {
+    file: data.file,
+    sep: data.sep,
+  });
+  const jsonData = JSON.parse(result);
+  columns.value = Object.keys(jsonData[0]).map((key) => ({
+    name: key,
+    label: key,
+    field: key,
+  }));
+  tableData.value = jsonData;
+  console.log(result);
 }
 
 // write csv to duckdb
