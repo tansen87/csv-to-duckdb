@@ -96,9 +96,10 @@ fn conn_db(table: String, file: String, sep: String) -> Result<String, Box<dyn E
 
     let db_path = format!("{parent_path}/{}.duckdb", file_name[0]);
     let conn = Connection::open(&db_path)?;
-    let idata = format!(
-        "CREATE TABLE IF NOT EXISTS {table} 
-        AS SELECT * FROM read_csv('{file}', all_varchar=true, sep='{sep}');"
+    let idata = format!("
+        CREATE TABLE {table} 
+        AS SELECT *
+        FROM read_csv('{file}', all_varchar=true, sep='{sep}');"
     );
     conn.execute_batch(&idata)?;
 
