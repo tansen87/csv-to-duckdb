@@ -83,21 +83,21 @@ fn conn_db(table: String, file: String, sep: String) -> Result<String, Box<dyn E
     let start = Instant::now();
 
     let file_path = Path::new(&file);
-    let file_name = match file_path.file_name() {
-        Some(name) => match name.to_str() {
-            Some(name_str) => name_str.split('.').collect::<Vec<&str>>(),
-            None => vec![],
-        },
-        None => vec![],
-    };
+    // let file_name = match file_path.file_name() {
+    //     Some(name) => match name.to_str() {
+    //         Some(name_str) => name_str.split('.').collect::<Vec<&str>>(),
+    //         None => vec![],
+    //     },
+    //     None => vec![],
+    // };
     let parent_path = file_path.parent()
         .map(|parent| parent.to_string_lossy())
         .unwrap_or_else(|| "Default Path".to_string().into());
 
-    let db_path = format!("{parent_path}/{}.duckdb", file_name[0]);
+    let db_path = format!("{parent_path}/mydb.duckdb");
     let conn = Connection::open(&db_path)?;
     let idata = format!("
-        CREATE TABLE {table} 
+        CREATE TABLE {table}
         AS SELECT *
         FROM read_csv('{file}', all_varchar=true, sep='{sep}');"
     );
