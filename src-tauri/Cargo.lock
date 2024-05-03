@@ -1333,6 +1333,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ducklling-plugin"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "csv",
+ "duckdb",
+ "indexmap 2.2.6",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+]
+
+[[package]]
 name = "dunce"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4691,20 +4705,6 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps 5.0.0",
-]
-
-[[package]]
-name = "sql-duck"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "csv",
- "duckdb",
- "indexmap 2.2.6",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
 ]
 
 [[package]]

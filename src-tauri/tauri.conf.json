@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "sql-duck",
+    "productName": "duckling-plugin",
     "version": "0.1.0"
   },
   "tauri": {
@@ -19,7 +19,7 @@
     },
     "windows": [
       {
-        "title": "sql-duck",
+        "title": "duckling-plugin",
         "width": 800,
         "height": 600
       }
