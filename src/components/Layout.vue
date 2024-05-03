@@ -3,7 +3,7 @@
     <div class="row no-wrap">
       <div class="col">
         <q-tabs align="left" v-model="tab" class="text-right">
-          <q-tab name="Connect" label="Connect" />
+          <q-tab name="csv2db" label="csv2db" />
           <q-tab name="PageTwo" label="PageTwo" />
         </q-tabs>
       </div>
@@ -22,16 +22,16 @@
 
 <script setup>
 import { ref } from 'vue'
-import Connect from './Connect.vue'
+import csv2db from './Csv2db.vue'
 import PageTwo from './PageTwo.vue'
 
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 
-const tab = ref('Connect')
+const tab = ref('csv2db')
 const tabs = {
-  Connect: Connect,
+  csv2db: csv2db,
   PageTwo: PageTwo,
 }
 
