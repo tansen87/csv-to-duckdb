@@ -79,10 +79,11 @@ fn csv2json(file: String, sep: String) -> Result<String, Box<dyn Error>> {
     Ok(result)
 }
 
-fn csv_to_db(table: String, file: String, sep: String, db: String) -> Result<String, Box<dyn Error>> {
+fn csv_to_db(table: String, file: String, sep: String, db: String, folder: String) -> Result<String, Box<dyn Error>> {
     let start = Instant::now();
 
-    let conn = Connection::open(db)?;
+    let db_path = format!("{folder}\\{db}.duckdb");
+    let conn = Connection::open(db_path)?;
     let idata = format!("
         CREATE TABLE {table}
         AS SELECT *
@@ -140,8 +141,8 @@ pub async fn view(file: String, sep: String, window: tauri::Window) -> String {
 }
 
 #[tauri::command]
-pub async fn csv2db(table: String, file: String, sep: String, db: String) -> String {
-    let elapsed_time = match async { csv_to_db(table, file, sep, db) }.await {
+pub async fn csv2db(table: String, file: String, sep: String, db: String, folder: String) -> String {
+    let elapsed_time = match async { csv_to_db(table, file, sep, db, folder) }.await {
         Ok(res) => res,
         Err(err) => {
             eprintln!("connect error: {err}");

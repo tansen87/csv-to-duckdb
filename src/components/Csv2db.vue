@@ -21,13 +21,14 @@
           />
         </template>
       </q-input>
+      <q-input color="teal" v-model="data.db" label="db name" />
     </div>
 
     <!-- column 2 -->
     <div class="q-gutter-y-md" style="flex-basis: 33%; max-width: 500px">
       <q-input color="teal" v-model="data.file" label="csv file" autogrow>
       </q-input>
-      <q-input color="teal" v-model="data.db" label="duckdb file" autogrow>
+      <q-input color="teal" v-model="data.dbFolder" label="duckdb folder" autogrow>
       </q-input>
     </div>
 
@@ -53,7 +54,7 @@
         <template v-slot:prepend>
           <q-btn
             color="secondary"
-            label="open db"
+            label="open folder"
             @click="openDB"
             style="width: 145px"
           />
@@ -86,6 +87,7 @@
 import { ref, reactive } from "vue";
 import { useQuasar, QSpinnerGears, Notify } from "quasar";
 import { open } from "@tauri-apps/api/dialog";
+import { appConfigDir } from '@tauri-apps/api/path';
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from "@tauri-apps/api/event";
 
@@ -98,8 +100,8 @@ const data = reactive({
   file: "",
   fileExtension: ["csv", "txt", "tsv", "spext", "dat"],
   sep: ",",
-  db: "",
-  dbExtension: ["duckdb"],
+  db: "mydb",
+  dbFolder: "",
 });
 const sepOptions = [",", "|", "\\t", ";"];
 
@@ -160,10 +162,10 @@ async function writeDB() {
     });
     return;
   }
-  if (data.db === "") {
+  if (data.db === "" || data.dbFolder === "") {
     Notify.create({
       type: "warning",
-      message: "未选择duckdb文件",
+      message: "未选择文件夹or未命名duckdb文件名",
       position: "bottom-right",
     });
     return;
@@ -179,11 +181,12 @@ async function writeDB() {
     message: "正在写入duckdb...",
   });
 
-  const res = await invoke("connect", {
+  const res = await invoke("csv2db", {
     table: data.table,
     file: data.file,
     sep: data.sep,
     db: data.db,
+    folder: data.dbFolder,
   });
 
   if (res.includes("Error")) {
@@ -223,17 +226,14 @@ async function writeDB() {
 
 // open duckdb file
 async function openDB() {
+  // Open a selection dialog for directories
   const selected = await open({
+    directory: true,
     multiple: false,
-    filters: [
-      {
-        name: "duckdb",
-        extensions: data.dbExtension,
-      },
-    ],
+    defaultPath: await appConfigDir(),
   });
   if (Array.isArray(selected)) {
-    data.db = selected.toString();
+    data.dbFolder = selected.toString();
   } else if (selected === null) {
     Notify.create({
       type: "warning",
@@ -242,7 +242,7 @@ async function openDB() {
     });
     return;
   } else {
-    data.db = selected;
+    data.dbFolder = selected;
   }
 }
 </script>
