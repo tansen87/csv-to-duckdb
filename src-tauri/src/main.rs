@@ -7,7 +7,7 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             connect::view,
-            connect::connect,
+            connect::csv2db,
             connect::query,
         ])
         .run(tauri::generate_context!())

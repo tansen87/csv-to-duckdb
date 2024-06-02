@@ -79,7 +79,7 @@ fn csv2json(file: String, sep: String) -> Result<String, Box<dyn Error>> {
     Ok(result)
 }
 
-fn conn_db(table: String, file: String, sep: String) -> Result<String, Box<dyn Error>> {
+fn csv_to_db(table: String, file: String, sep: String) -> Result<String, Box<dyn Error>> {
     let start = Instant::now();
 
     let file_path = Path::new(&file);
@@ -153,8 +153,8 @@ pub async fn view(file: String, sep: String, window: tauri::Window) -> String {
 }
 
 #[tauri::command]
-pub async fn connect(table: String, file: String, sep: String) -> String {
-    let elapsed_time = match async { conn_db(table, file, sep) }.await {
+pub async fn csv2db(table: String, file: String, sep: String) -> String {
+    let elapsed_time = match async { csv_to_db(table, file, sep) }.await {
         Ok(res) => res,
         Err(err) => {
             eprintln!("connect error: {err}");
