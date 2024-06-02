@@ -25,7 +25,10 @@
 
     <!-- column 2 -->
     <div class="q-gutter-y-md" style="flex-basis: 33%; max-width: 500px">
-      <q-input color="teal" v-model="data.file" label="csv file" autogrow> </q-input>
+      <q-input color="teal" v-model="data.file" label="csv file" autogrow>
+      </q-input>
+      <q-input color="teal" v-model="data.db" label="duckdb file" autogrow>
+      </q-input>
     </div>
 
     <!-- column 3 -->
@@ -42,6 +45,16 @@
             color="secondary"
             label="write"
             @click="writeDB"
+            style="width: 145px"
+          />
+        </template>
+      </q-input>
+      <q-input>
+        <template v-slot:prepend>
+          <q-btn
+            color="secondary"
+            label="open db"
+            @click="openDB"
             style="width: 145px"
           />
         </template>
@@ -85,6 +98,8 @@ const data = reactive({
   file: "",
   fileExtension: ["csv", "txt", "tsv", "spext", "dat"],
   sep: ",",
+  db: "",
+  dbExtension: ["duckdb"],
 });
 const sepOptions = [",", "|", "\\t", ";"];
 
@@ -145,6 +160,14 @@ async function writeDB() {
     });
     return;
   }
+  if (data.db === "") {
+    Notify.create({
+      type: "warning",
+      message: "未选择duckdb文件",
+      position: "bottom-right",
+    });
+    return;
+  }
 
   const notif = $q.notify({
     color: "ongoing",
@@ -160,6 +183,7 @@ async function writeDB() {
     table: data.table,
     file: data.file,
     sep: data.sep,
+    db: data.db,
   });
 
   if (res.includes("Error")) {
@@ -194,6 +218,31 @@ async function writeDB() {
         },
       ],
     });
+  }
+}
+
+// open duckdb file
+async function openDB() {
+  const selected = await open({
+    multiple: false,
+    filters: [
+      {
+        name: "duckdb",
+        extensions: data.dbExtension,
+      },
+    ],
+  });
+  if (Array.isArray(selected)) {
+    data.db = selected.toString();
+  } else if (selected === null) {
+    Notify.create({
+      type: "warning",
+      message: "未选择duckdb文件",
+      position: "bottom-right",
+    });
+    return;
+  } else {
+    data.db = selected;
   }
 }
 </script>
