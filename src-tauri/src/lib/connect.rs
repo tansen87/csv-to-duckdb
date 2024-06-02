@@ -79,23 +79,10 @@ fn csv2json(file: String, sep: String) -> Result<String, Box<dyn Error>> {
     Ok(result)
 }
 
-fn csv_to_db(table: String, file: String, sep: String) -> Result<String, Box<dyn Error>> {
+fn csv_to_db(table: String, file: String, sep: String, db: String) -> Result<String, Box<dyn Error>> {
     let start = Instant::now();
 
-    let file_path = Path::new(&file);
-    // let file_name = match file_path.file_name() {
-    //     Some(name) => match name.to_str() {
-    //         Some(name_str) => name_str.split('.').collect::<Vec<&str>>(),
-    //         None => vec![],
-    //     },
-    //     None => vec![],
-    // };
-    let parent_path = file_path.parent()
-        .map(|parent| parent.to_string_lossy())
-        .unwrap_or_else(|| "Default Path".to_string().into());
-
-    let db_path = format!("{parent_path}/mydb.duckdb");
-    let conn = Connection::open(&db_path)?;
+    let conn = Connection::open(db)?;
     let idata = format!("
         CREATE TABLE {table}
         AS SELECT *
@@ -153,8 +140,8 @@ pub async fn view(file: String, sep: String, window: tauri::Window) -> String {
 }
 
 #[tauri::command]
-pub async fn csv2db(table: String, file: String, sep: String) -> String {
-    let elapsed_time = match async { csv_to_db(table, file, sep) }.await {
+pub async fn csv2db(table: String, file: String, sep: String, db: String) -> String {
+    let elapsed_time = match async { csv_to_db(table, file, sep, db) }.await {
         Ok(res) => res,
         Err(err) => {
             eprintln!("connect error: {err}");
