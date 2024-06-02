@@ -1,7 +1,10 @@
 # duckling-plugin
 ### screen shot
 ![image](https://github.com/tansen87/sql-duck/assets/98570790/4e5d921c-f5c7-4b93-a465-d80a75924d85)
-
+### install
+```bash
+pnpm i
+```
 ### dev
 ```bash
 pnpm run tauri:dev
