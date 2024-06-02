@@ -79,7 +79,7 @@ fn csv2json(file: String, sep: String) -> Result<String, Box<dyn Error>> {
     Ok(result)
 }
 
-fn csv_to_db(table: String, file: String, sep: String, db: String, folder: String) -> Result<String, Box<dyn Error>> {
+fn csv_to_db(table: String, file: String, sep: String, quote: String, db: String, folder: String) -> Result<String, Box<dyn Error>> {
     let start = Instant::now();
 
     let db_path = format!("{folder}\\{db}.duckdb");
@@ -87,7 +87,7 @@ fn csv_to_db(table: String, file: String, sep: String, db: String, folder: Strin
     let idata = format!("
         CREATE TABLE {table}
         AS SELECT *
-        FROM read_csv('{file}', all_varchar=true, sep='{sep}');"
+        FROM read_csv('{file}', all_varchar=true, sep='{sep}', quote='{quote}');"
     );
     conn.execute_batch(&idata)?;
 
@@ -141,8 +141,8 @@ pub async fn view(file: String, sep: String, window: tauri::Window) -> String {
 }
 
 #[tauri::command]
-pub async fn csv2db(table: String, file: String, sep: String, db: String, folder: String) -> String {
-    let elapsed_time = match async { csv_to_db(table, file, sep, db, folder) }.await {
+pub async fn csv2db(table: String, file: String, sep: String, quote: String, db: String, folder: String) -> String {
+    let elapsed_time = match async { csv_to_db(table, file, sep, quote, db, folder) }.await {
         Ok(res) => res,
         Err(err) => {
             eprintln!("connect error: {err}");

@@ -21,7 +21,17 @@
           />
         </template>
       </q-input>
-      <q-input color="teal" v-model="data.db" label="db name" />
+      <!-- <q-input color="teal" v-model="data.db" label="db name" /> -->
+      <q-input color="teal" v-model="data.db" label="db name">
+        <template v-slot:prepend>
+          <q-input
+            v-model="data.quote"
+            :options="sepOptions"
+            label="quote"
+            style="width: 100px"
+          />
+        </template>
+      </q-input>
     </div>
 
     <!-- column 2 -->
@@ -100,6 +110,7 @@ const data = reactive({
   file: "",
   fileExtension: ["csv", "txt", "tsv", "spext", "dat"],
   sep: ",",
+  quote: "",
   db: "mydb",
   dbFolder: "",
 });
@@ -185,6 +196,7 @@ async function writeDB() {
     table: data.table,
     file: data.file,
     sep: data.sep,
+    quote: data.quote,
     db: data.db,
     folder: data.dbFolder,
   });
