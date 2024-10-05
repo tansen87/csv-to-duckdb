@@ -21,25 +21,18 @@
           />
         </template>
       </q-input>
-      <!-- <q-input color="teal" v-model="data.db" label="db name" /> -->
-      <q-input color="teal" v-model="data.db" label="db name">
-        <template v-slot:prepend>
-          <q-input
-            v-model="data.quote"
-            :options="sepOptions"
-            label="quote"
-            style="width: 100px"
-          />
-        </template>
-      </q-input>
+
+      <q-input
+        v-model="data.quote"
+        :options="sepOptions"
+        label="quote"
+        style="width: 50px"
+      />
     </div>
 
     <!-- column 2 -->
     <div class="q-gutter-y-md" style="flex-basis: 33%; max-width: 500px">
-      <q-input color="teal" v-model="data.file" label="csv file" autogrow>
-      </q-input>
-      <q-input color="teal" v-model="data.dbFolder" label="duckdb folder" autogrow>
-      </q-input>
+      <q-input color="teal" v-model="data.file" label="csv file" autogrow />
     </div>
 
     <!-- column 3 -->
@@ -56,16 +49,6 @@
             color="secondary"
             label="write"
             @click="writeDB"
-            style="width: 145px"
-          />
-        </template>
-      </q-input>
-      <q-input>
-        <template v-slot:prepend>
-          <q-btn
-            color="secondary"
-            label="open folder"
-            @click="openDB"
             style="width: 145px"
           />
         </template>
@@ -96,9 +79,8 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useQuasar, QSpinnerGears, Notify } from "quasar";
-import { open } from "@tauri-apps/api/dialog";
-import { appConfigDir } from '@tauri-apps/api/path';
-import { invoke } from "@tauri-apps/api/tauri";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 const $q = useQuasar();
@@ -106,13 +88,11 @@ const $q = useQuasar();
 const columns = ref([]);
 const tableData = ref([]);
 const data = reactive({
-  table: "gl",
+  table: "t1",
   file: "",
-  fileExtension: ["csv", "txt", "tsv", "spext", "dat"],
+  fileExtension: ["*"],
   sep: ",",
   quote: "",
-  db: "mydb",
-  dbFolder: "",
 });
 const sepOptions = [",", "|", "\\t", ";"];
 
@@ -160,7 +140,6 @@ async function openFile() {
     field: key,
   }));
   tableData.value = jsonData;
-  console.log(result);
 }
 
 // write csv to duckdb
@@ -173,10 +152,16 @@ async function writeDB() {
     });
     return;
   }
-  if (data.db === "" || data.dbFolder === "") {
+
+  const outputPath = await save({
+    title: "Export",
+    defaultPath: `filename.duckdb`,
+    filters: [{ name: "duckdb", extensions: ["duckdb"] }],
+  });
+  if (outputPath === "" || outputPath === null) {
     Notify.create({
       type: "warning",
-      message: "未选择文件夹or未命名duckdb文件名",
+      message: "未选择保存文件",
       position: "bottom-right",
     });
     return;
@@ -197,8 +182,7 @@ async function writeDB() {
     file: data.file,
     sep: data.sep,
     quote: data.quote,
-    db: data.db,
-    folder: data.dbFolder,
+    outputPath: outputPath,
   });
 
   if (res.includes("Error")) {
@@ -233,28 +217,6 @@ async function writeDB() {
         },
       ],
     });
-  }
-}
-
-// open duckdb file
-async function openDB() {
-  // Open a selection dialog for directories
-  const selected = await open({
-    directory: true,
-    multiple: false,
-    defaultPath: await appConfigDir(),
-  });
-  if (Array.isArray(selected)) {
-    data.dbFolder = selected.toString();
-  } else if (selected === null) {
-    Notify.create({
-      type: "warning",
-      message: "未选择duckdb文件",
-      position: "bottom-right",
-    });
-    return;
-  } else {
-    data.dbFolder = selected;
   }
 }
 </script>

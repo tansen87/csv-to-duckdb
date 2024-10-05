@@ -1,42 +1,21 @@
-use std::{
-    error::Error, path::Path, sync::Arc, time::Instant
-};
+use std::{error::Error, path::Path, time::Instant};
 
-use duckdb::{
-    polars::{
-        datatypes::DataType,
-        io::{csv::CsvReader, SerReader},
-        prelude::Schema
-    },
-    Connection,
-    Result,
-};
+use duckdb::{Connection, Result, polars::prelude::*};
 use indexmap::IndexMap;
+use tauri::Emitter;
 
 fn csv2json(file: String, sep: String) -> Result<String, Box<dyn Error>> {
-    let mut separator = Vec::new();
     let sep = if sep == "\\t" {
         b'\t'
     } else {
         sep.clone().into_bytes()[0]
     };
-    separator.push(sep);
-
-    let ow_df = CsvReader::from_path(file.clone())?
-        .with_separator(separator[0])
-        .with_n_rows(Some(0))
-        .with_n_threads(Some(1))
-        .finish()?;
-    let header = ow_df.get_column_names();
-    let mut schema = Schema::new();
-    for h in header.iter() {
-        schema.with_column(h.to_string().into(), DataType::Utf8);
-    }
 
     let df = CsvReader::from_path(file)?
-        .with_separator(separator[0])
+        .with_separator(sep)
         .with_n_rows(Some(100))
-        .with_dtypes(Some(Arc::new(schema.clone())))
+        .infer_schema(Some(0))
+        .truncate_ragged_lines(true)
         .has_header(true)
         .with_n_threads(Some(4))
         .finish()?;
@@ -79,12 +58,18 @@ fn csv2json(file: String, sep: String) -> Result<String, Box<dyn Error>> {
     Ok(result)
 }
 
-fn csv_to_db(table: String, file: String, sep: String, quote: String, db: String, folder: String) -> Result<String, Box<dyn Error>> {
+fn csv_to_db(
+    table: String,
+    file: String,
+    sep: String,
+    quote: String,
+    output_path: String,
+) -> Result<String, Box<dyn Error>> {
     let start = Instant::now();
 
-    let db_path = format!("{folder}\\{db}.duckdb");
-    let conn = Connection::open(db_path)?;
-    let idata = format!("
+    let conn = Connection::open(output_path)?;
+    let idata = format!(
+        "
         CREATE TABLE {table}
         AS SELECT *
         FROM read_csv('{file}', all_varchar=true, sep='{sep}', quote='{quote}');"
@@ -100,20 +85,15 @@ fn csv_to_db(table: String, file: String, sep: String, quote: String, db: String
 
 fn excute_query(db_file: String, sep: String, sql: String) -> Result<String, Box<dyn Error>> {
     let start = Instant::now();
-    
+
     let file_path = Path::new(&db_file);
-    let file_name = match file_path.file_name() {
-        Some(name) => match name.to_str() {
-            Some(name_str) => name_str.split('.').collect::<Vec<&str>>(),
-            None => vec![],
-        },
-        None => vec![],
-    };
-    let parent_path = file_path.parent()
+    let file_name = Path::new(&db_file).file_name().unwrap().to_str().unwrap();
+    let parent_path = file_path
+        .parent()
         .map(|parent| parent.to_string_lossy())
-        .unwrap_or_else(|| "Default Path".to_string().into());
+        .unwrap();
     let current_time = chrono::Local::now().format("%Y-%m-%d-%H%M%S");
-    let output = format!("{parent_path}/{}_query_{current_time}.csv", file_name[0]);
+    let output = format!("{parent_path}/{}_query_{current_time}.csv", file_name);
 
     let conn = Connection::open(db_file)?;
     let edata = format!("COPY ({sql}) TO '{output}' (DELIMITER '{sep}');");
@@ -141,8 +121,14 @@ pub async fn view(file: String, sep: String, window: tauri::Window) -> String {
 }
 
 #[tauri::command]
-pub async fn csv2db(table: String, file: String, sep: String, quote: String, db: String, folder: String) -> String {
-    let elapsed_time = match async { csv_to_db(table, file, sep, quote, db, folder) }.await {
+pub async fn csv2db(
+    table: String,
+    file: String,
+    sep: String,
+    quote: String,
+    output_path: String,
+) -> String {
+    let elapsed_time = match async { csv_to_db(table, file, sep, quote, output_path) }.await {
         Ok(res) => res,
         Err(err) => {
             eprintln!("connect error: {err}");
