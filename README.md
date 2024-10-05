@@ -1,6 +1,9 @@
-# duckling-plugin
+# csv to duckdb
+
+> Write csv to dudkdb.
+
 ### screen shot
-[home](/demo/demo.png)
+![home](/demo/demo.png)
 
 
 ### install
